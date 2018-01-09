@@ -330,10 +330,10 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, yuvTextureName);
 
                 if(colorspace == COLORSPACE_YUY2)
-                    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width / 2, height, 0, GLES20.GL_RGBA,
+                    GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, width / 2, height, GLES20.GL_RGBA,
                         GLES20.GL_UNSIGNED_BYTE, rawBuffer);
                 else if(colorspace == COLORSPACE_NV12)
-                    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width / 4, height * 2, 0, GLES20.GL_RGBA,
+                    GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, width / 4, height * 2, GLES20.GL_RGBA,
                             GLES20.GL_UNSIGNED_BYTE, rawBuffer);
 
                 convertYUV();
