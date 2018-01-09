@@ -42,6 +42,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
     private ShortBuffer indexBuffer;
     private float[] mat;
     private int textureName;
+    private int backTextureName;
 
     ByteBuffer rawBuffer;
     boolean hasNewFrame = false;
@@ -54,6 +55,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
 
     // GLSL based YUV -> RGB converter
     private int fbo;
+    private int backFbo;
     private int oldFbo;
     private int yuy2ConverterProgram;
     private int nv12ConverterProgram;
@@ -112,10 +114,16 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         createSkybox();
 
         // Texture to be projected onto sky box
-        int[] texLoc = {0};
-        GLES20.glGenTextures(1, texLoc, 0);
+        int[] texLoc = {0, 0};
+        GLES20.glGenTextures(2, texLoc, 0);
         textureName = texLoc[0];
+        backTextureName = texLoc[1];
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureName);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0, GLES20.GL_RGBA,
+                GLES20.GL_UNSIGNED_BYTE, null);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, backTextureName);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0, GLES20.GL_RGBA,
@@ -200,15 +208,20 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
     private void createYUVConverter() {
 
         // Initialize GLSL based YUV converter
-        int[] fbos = {0};
-        GLES20.glGenFramebuffers(1, fbos, 0);
+        int[] fbos = {0, 0};
+        GLES20.glGenFramebuffers(2, fbos, 0);
         fbo = fbos[0];
+        backFbo = fbos[1];
         GLES20.glGetIntegerv(GLES20.GL_FRAMEBUFFER_BINDING, fbos, 0);
         oldFbo = fbos[0];
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fbo);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
                 GLES20.GL_TEXTURE_2D, textureName, 0);
         int fbStatus = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, backFbo);
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                GLES20.GL_TEXTURE_2D, backTextureName, 0);
+        int bfbStatus = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, oldFbo);
         assert(fbStatus == GLES20.GL_FRAMEBUFFER_COMPLETE);
 
@@ -307,7 +320,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         GLES20.glGetIntegerv(GLES20.GL_FRAMEBUFFER_BINDING, fbos, 0);
         oldFbo = fbos[0];
 
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fbo);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, backFbo);
 
         if(colorspace == COLORSPACE_NV12) {
             GLES20.glUseProgram(nv12ConverterProgram);
@@ -330,6 +343,14 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, oldFbo);
+
+        // Flip double buffered RGB textures
+        int tmp = fbo;
+        fbo = backFbo;
+        backFbo = tmp;
+        tmp = textureName;
+        textureName = backTextureName;
+        backTextureName = tmp;
     }
 
     @Override
