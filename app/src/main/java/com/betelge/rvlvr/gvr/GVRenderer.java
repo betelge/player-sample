@@ -48,7 +48,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
     boolean hasNewFrame = false;
 
     float[] headView;
-    float rot = 0;
+    float rotx, roty = 0;
 
     private int videoFrameCount = 0;
     private long lastFrameTime = 0;
@@ -171,7 +171,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         textureUniformLoc = GLES20.glGetUniformLocation(skyBoxProgram, "frame");
         textureUniformBlitLoc = GLES20.glGetUniformLocation(blitProgram, "frame");
         mapLoc = GLES20.glGetUniformLocation(skyBoxProgram, "u_map");
-        angleLoc = GLES20.glGetUniformLocation(skyBoxProgram, "u_angle");
+        angleLoc = GLES20.glGetUniformLocation(skyBoxProgram, "u_angles");
 
         String vertexLog = GLES20.glGetShaderInfoLog(vertexShader);
         String fragmentLog = GLES20.glGetShaderInfoLog(fragmentShader);
@@ -430,9 +430,8 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         else {
             eye.getFov().toPerspectiveMatrix(.1f, 1000f, mat, 0);
             Matrix.multiplyMM(mat, 0, mat, 0, eye.getEyeView(), 0);
-            //Matrix.rotateM(mat, 0, rot, 1, 0, 0);
-            //rot += 1;
-            //rot = rot % 360;
+            Matrix.rotateM(mat, 0, roty, 1, 0, 0);
+            Matrix.rotateM(mat, 0, rotx, 0, 1, 0);
             GLES20.glUniformMatrix4fv(mvpLoc, 1, false, mat, 0);
         }
 
@@ -454,7 +453,8 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
             }
 
             float angle = projectionAngle / 360f;
-            GLES20.glUniform1f(angleLoc, angle);
+            // TODO: Set aspect ratio if needed
+            GLES20.glUniform2f(angleLoc, angle, 1f);
         }
 
 
@@ -500,6 +500,11 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         this.width = w;
         this.height = h;
     }*/
+
+    public void drag(float dx, float dy) {
+        rotx += -.1 * dx;
+        roty += -.1 * dy;
+    }
 
     @Override
     public void setSignalAspectRatio(int w, int h) {
