@@ -3,6 +3,7 @@
 precision mediump float;
 
 uniform sampler2D tex;
+uniform float u_cropRatio;
 
 varying vec2 v_texCoord;
 
@@ -10,21 +11,23 @@ void main(void) {
 
     float r, g, b, y, u, v;
 
-    vec4 yyyy = texture2D(tex, vec2(1., .5) * v_texCoord);
+    vec2 cropCoord = vec2(1., u_cropRatio) * (v_texCoord - vec2(.5)) + vec2(.5);
+
+    vec4 yyyy = texture2D(tex, vec2(1., .5) * cropCoord);
 
     float f = mod(gl_FragCoord.x, 4.);
-    if(f < .5)
+    if(f < 1.)
         y = yyyy.r;
-    else if(f < 1.5)
+    else if(f < 2.)
         y = yyyy.g;
-    else if(f < 2.5)
+    else if(f < 3.)
         y = yyyy.b;
-    else if(f < 3.5)
+    else
         y = yyyy.a;
 
-    vec4 uv = texture2D(tex, vec2(1., .25) * v_texCoord + vec2(0., .5));
+    vec4 uv = texture2D(tex, vec2(1., .25) * cropCoord + vec2(0., .5));
 
-    if(f < .5) {
+    if(f < 2.) {
         u = uv.r;
         v = uv.g;
     }
