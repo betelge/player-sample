@@ -60,6 +60,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
     private int yuvTextureUniformYUY2Loc;
     private int yuvTextureUniformNV12Loc;
     private int yuvTextureName;
+    private int yuvBackTextureName; // Used for double buffering when uploading frame
     private FloatBuffer quadBuffer;
 
     // Input signal
@@ -258,10 +259,22 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         //System.out.print(linkLog);
 
         // YUV texture
-        int[] texLoc = {0};
-        GLES20.glGenTextures(1, texLoc, 0);
+        int[] texLoc = {0, 0};
+        GLES20.glGenTextures(2, texLoc, 0);
         yuvTextureName = texLoc[0];
+        yuvBackTextureName = texLoc[1];
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, yuvTextureName);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        if(colorspace == COLORSPACE_YUY2)
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width / 2, height, 0, GLES20.GL_RGBA,
+                    GLES20.GL_UNSIGNED_BYTE, null);
+        else if(colorspace == COLORSPACE_NV12)
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width / 4, height * 2, 0, GLES20.GL_RGBA,
+                    GLES20.GL_UNSIGNED_BYTE, null);
+
+        // TODO: Refactor
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, yuvBackTextureName);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
         if(colorspace == COLORSPACE_YUY2)
@@ -327,7 +340,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         // Upload texture to OpenGL when needed
         synchronized (rawBuffer) {
             if(hasNewFrame) {
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, yuvTextureName);
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, yuvBackTextureName);
 
                 if(colorspace == COLORSPACE_YUY2)
                     GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, width / 2, height, GLES20.GL_RGBA,
@@ -337,6 +350,10 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
                             GLES20.GL_UNSIGNED_BYTE, rawBuffer);
 
                 convertYUV();
+
+                int tmp = yuvTextureName;
+                yuvTextureName = yuvBackTextureName;
+                yuvBackTextureName = yuvTextureName;
 
                 hasNewFrame = false;
 
