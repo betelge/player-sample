@@ -87,7 +87,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         this.context = context;
         this.colorspace = colorspace;
 
-        mat = new float[16];
+        mat = new float[48];
         rawBuffer = ByteBuffer.allocateDirect(4 * width * height);
         rawBuffer.order(ByteOrder.nativeOrder());
         rawBuffer.flip();
@@ -438,10 +438,19 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
             GLES20.glUniformMatrix4fv(mvpBlitLoc, 1, false, mat, 0);
         }
         else {
-            eye.getFov().toPerspectiveMatrix(.1f, 1000f, mat, 0);
-            Matrix.multiplyMM(mat, 0, mat, 0, eye.getEyeView(), 0);
+            eye.getFov().toPerspectiveMatrix(.1f, 1000f, mat, 16);
+            Matrix.setIdentityM(mat, 0);
+            Matrix.multiplyMM(mat, 32, mat, 0, eye.getEyeView(), 0);
+
+
+            float[] vec4 = {0, 0, 0, 0, 0, 0, 0, 1};
+            Matrix.multiplyMV(vec4, 0, mat, 32, vec4, 4);
+            Matrix.translateM(mat, 32, -vec4[0] / vec4[3], -vec4[1] / vec4[3], -vec4[2] / vec4[3]);
+
+            Matrix.multiplyMM(mat, 0, mat, 16, mat, 32);
             Matrix.rotateM(mat, 0, roty, 1, 0, 0);
             Matrix.rotateM(mat, 0, rotx, 0, 1, 0);
+
             GLES20.glUniformMatrix4fv(mvpLoc, 1, false, mat, 0);
         }
 
