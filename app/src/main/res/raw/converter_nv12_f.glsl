@@ -17,23 +17,29 @@ void main(void) {
 
     float f = mod(gl_FragCoord.x, 4.);
     if(f < 1.)
-        y = yyyy.r;
+            gl_FragColor = vec4(0., 1., 0., 1.);
     else if(f < 2.)
-        y = yyyy.g;
+            gl_FragColor = vec4(1., 0., 0., 1.);
     else if(f < 3.)
-        y = yyyy.b;
+            gl_FragColor = vec4(1.);
     else
-        y = yyyy.a;
+            gl_FragColor = vec4(0., 0., 1., 1.);
+
+            return;
 
     vec4 uv = texture2D(tex, vec2(1., .25) * cropCoord + vec2(0., .5));
 
     if(f < 2.) {
         u = uv.r;
         v = uv.g;
+        gl_FragColor = vec4(1.);
+        return;
     }
     else {
         u = uv.b;
         v = uv.a;
+        gl_FragColor = vec4(0.);
+        return;
     }
 
     y = 1.1643 * (y - 0.0625);

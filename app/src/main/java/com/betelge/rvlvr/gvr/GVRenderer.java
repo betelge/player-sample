@@ -424,7 +424,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         if(noWrap && projectionType == DriftRenderer.PROJECTION_TYPE_NOVR) {
             Matrix.setIdentityM(mat, 0);
             float yScale = height / viewHeight * viewWidth / width;
-            Matrix.scaleM(mat, 0, 1, yScale, 1);
+            Matrix.scaleM(mat, 0, 10, 10*yScale, 1);
             GLES20.glUniformMatrix4fv(mvpBlitLoc, 1, false, mat, 0);
         }
         else {
