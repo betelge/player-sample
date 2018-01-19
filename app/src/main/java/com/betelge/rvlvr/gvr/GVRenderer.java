@@ -326,7 +326,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         if(colorspace == COLORSPACE_NV12) {
             GLES20.glUseProgram(nv12ConverterProgram);
             GLES20.glUniform1i(yuvTextureUniformNV12Loc, 0);
-            GLES20.glUniform1f(cropRatioNV12Loc, cropRatio);
+            GLES20.glUniform2f(cropRatioNV12Loc, cropRatio, width);
         }
         else if(colorspace == COLORSPACE_YUY2) {
             GLES20.glUseProgram(yuy2ConverterProgram);
