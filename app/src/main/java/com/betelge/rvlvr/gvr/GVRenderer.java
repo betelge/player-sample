@@ -426,7 +426,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
             }
         }
 
-        if(false/*showYUV*/)
+        if(noWrap)
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, yuvTextureName);
         else
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureName);
