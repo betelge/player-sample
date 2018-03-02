@@ -111,6 +111,8 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
     private float noWrapX = 0;
     private float noWrapY = 0;
 
+    private int frame = 0;
+
     public GVRenderer(Context context) {
         this.context = context;
 
@@ -425,6 +427,9 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
     @Override
     public void onNewFrame(HeadTransform headTransform) {
 
+        frame = frame % (256-8);
+        frame += 8;
+
         noWrap = noWrapNextFrame;
         width = widthNextFrame;
         height = heightNextFrame;
@@ -501,7 +506,21 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
     @Override
     public void onDrawEye(Eye eye) {
 
-        GLES20.glClearColor(.0f, .0f, 0f, 1f);
+        // Debug color
+        switch(eye.getType()) {
+            case Eye.Type.MONOCULAR:
+                GLES20.glClearColor(1f, 0f, frame/255f, 1f);
+                break;
+            case Eye.Type.LEFT:
+                GLES20.glClearColor(0f, 0f, frame/255f, 1f);
+                break;
+            case Eye.Type.RIGHT:
+                GLES20.glClearColor(1f, 1f, frame/255f, 1f);
+                break;
+            default:
+                GLES20.glClearColor(1f, 1f, 1f, 1f);
+
+        }
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         if(noWrap) {
@@ -586,6 +605,8 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
         else
             GLES20.glDrawElements(primitiveType, indexBuffer.limit(),
                     GLES20.GL_UNSIGNED_SHORT, indexBuffer);
+
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
     }
 
     @Override

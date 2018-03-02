@@ -43,7 +43,7 @@ public class ViewActivity extends GvrActivity implements View.OnTouchListener {
 
         initGVR();
 
-        initPlayer();
+        //initPlayer();
     }
 
     private void initGVR() {
