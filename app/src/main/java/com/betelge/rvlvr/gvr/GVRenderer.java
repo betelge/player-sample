@@ -512,7 +512,7 @@ public class GVRenderer implements GvrView.StereoRenderer, DriftRenderer {
                 GLES20.glClearColor(1f, 0f, frame/255f, 1f);
                 break;
             case Eye.Type.LEFT:
-                GLES20.glClearColor(0f, 0f, frame/255f, 1f);
+                GLES20.glClearColor(0f, 1f, frame/255f, 1f);
                 break;
             case Eye.Type.RIGHT:
                 GLES20.glClearColor(1f, 1f, frame/255f, 1f);
